@@ -1,1 +1,223 @@
-<div class="col-item"><div class="col-num"></div><div class="col-text">帶直笛</div></div>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班級聯絡簿</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #FBF3DC;
+    --paper-dark: #F2E4B8;
+    --border-brown: #6B4A2B;
+    --gold: #E8C468;
+    --gold-dark: #D9A93D;
+    --red: #C0392B;
+    --ink: #3A2E22;
+    --ink-soft: #7A6A50;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: #EDE6D3;
+    color: var(--ink);
+    font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    min-height:100vh;
+    padding: 0 0 50px;
+  }
+  header{ text-align:center; padding: 26px 20px 18px; }
+  header h1{
+    margin:0; font-size: 24px; color: var(--ink);
+    font-family:"Kalam",sans-serif; font-weight:700; letter-spacing:1px;
+  }
+  main{ max-width: 680px; margin: 0 auto; padding: 0 18px; }
+
+  .card{
+    background: var(--paper);
+    border: 4px solid var(--border-brown);
+    border-radius: 22px;
+    overflow:hidden;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+  }
+  .card-title{
+    background: var(--paper-dark);
+    border-bottom: 3px solid var(--border-brown);
+    padding: 16px 20px;
+    font-size: 17px; font-weight:700; text-align:center;
+  }
+  .card-body{ padding: 18px 18px 22px; }
+
+  /* ---- 上方：直式編號欄位 + 大日期區塊 ---- */
+  .top-row{
+    display:flex; gap:0; align-items:stretch;
+    border: 2px solid var(--border-brown);
+    border-radius: 12px;
+    overflow:hidden;
+    min-height: 260px;
+  }
+
+  .columns-table{
+    flex:1; display:flex; flex-direction:row-reverse;
+    overflow-x:auto;
+    background: var(--paper);
+  }
+  .col-item{
+    display:flex; flex-direction:column;
+    min-width: 48px;
+    border-left: 1px solid rgba(107,74,43,0.25);
+  }
+  .col-item:first-child{ border-left:none; }
+  .col-num{
+    background: var(--paper-dark);
+    text-align:center; font-weight:700; font-size:13px; color: var(--ink-soft);
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(107,74,43,0.25);
+  }
+  .col-text{
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 18px; font-weight:700; letter-spacing: 2px;
+    padding: 12px 8px;
+    line-height: 1.9;
+    flex:1;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(1.9em - 1px),
+      rgba(107,74,43,0.14) calc(1.9em - 1px),
+      rgba(107,74,43,0.14) 1.9em
+    );
+  }
+
+  .date-block{
+    flex: 0 0 100px;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    display:flex; flex-direction:column;
+    border-left: 2px solid var(--border-brown);
+  }
+  .date-cell{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-bottom: 1px solid rgba(107,74,43,0.35);
+    padding: 6px 4px;
+  }
+  .date-cell:last-child{ border-bottom:none; }
+  .date-cell .num{
+    font-family:"Kalam",sans-serif; font-weight:700; font-size: 26px; color: var(--red);
+    line-height:1;
+  }
+  .date-cell .unit{ font-size: 12px; color: var(--ink-soft); margin-top:2px; }
+  .date-cell.weekday .num{ font-size: 20px; }
+
+  .classname-row{
+    text-align:center; margin-top:12px; font-size:14px; color: var(--ink-soft);
+  }
+  .classname-row b{ color: var(--ink); font-family:"Kalam",sans-serif; font-size:16px; }
+
+  .divider{
+    border: none; border-top: 2px dashed rgba(107,74,43,0.35);
+    margin: 16px 0 14px;
+  }
+
+  .teacher-note{
+    background: rgba(192,57,43,0.08);
+    border-left: 4px solid var(--red);
+    border-radius: 8px;
+    padding: 13px 15px;
+    font-size: 14px; line-height:1.6;
+  }
+  .teacher-note b{ color: var(--red); }
+
+  footer{
+    max-width:680px; margin: 18px auto 0; padding: 0 18px;
+    color: var(--ink-soft); font-size:12px; text-align:center;
+  }
+
+  @media (max-width:480px){
+    .col-text{ font-size:16px; padding:10px 6px; }
+    .date-block{ flex-basis: 86px; }
+    .date-cell .num{ font-size:22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <!-- ===== 改這裡：標題 ===== -->
+  <h1>📋 三年級電子聯絡本</h1>
+  <!-- ===== 標題結束 ===== -->
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-title">今天的功課和明天應帶物品</div>
+    <div class="card-body">
+
+      <div class="top-row">
+        <div class="columns-table" id="columnsTable">
+          <!--
+            ===== 改這裡：每一項目用一個 <div class="col-item"><div class="col-num"></div><div class="col-text">文字</div></div>
+            文字會直著寫，編號會自動產生不用自己填。
+            要新增項目，直接複製一整組（從 <div class="col-item"> 到對應的 </div>）貼在後面，改「col-text」裡的文字就好。
+            項目會由左到右依照你寫的順序排列（跟課本聯絡簿一樣，最早的項目在最右邊）。
+            每欄文字不要放太長的句子，太長會被拉得很高，建議濃縮成 4-8 個字的短語。
+          -->
+          <div class="col-item"><div class="col-num"></div><div class="col-text">明返校日</div></div>
+          <div class="col-item"><div class="col-num"></div><div class="col-text">帶直笛</div></div>
+          <div class="col-item"><div class="col-num"></div><div class="col-text">國習5課</div></div>
+          <div class="col-item"><div class="col-num"></div><div class="col-text">數習p30</div></div>
+          <div class="col-item"><div class="col-num"></div><div class="col-text">閱讀20分</div></div>
+          <!-- ===== 項目結束 ===== -->
+        </div>
+
+        <div class="date-block">
+          <div class="date-cell"><span class="num" id="rocYear">115</span><span class="unit">年</span></div>
+          <div class="date-cell"><span class="num" id="month">8</span><span class="unit">月</span></div>
+          <div class="date-cell"><span class="num" id="day">26</span><span class="unit">日</span></div>
+          <div class="date-cell weekday"><span class="num" id="weekday">三</span><span class="unit">星期</span></div>
+        </div>
+      </div>
+
+      <div class="classname-row">
+        <!-- ===== 改這裡：班級名稱 ===== -->
+        <b>三年二班</b> 電子聯絡本
+        <!-- ===== 班級名稱結束 ===== -->
+      </div>
+
+      <hr class="divider">
+
+      <div class="teacher-note">
+        <!-- ===== 改這裡：老師補充文字 ===== -->
+        <b>老師補充：</b>暑假作業、學用品、防災頭套、簽字筆、姓名貼 請於本週五前繳交，謝謝配合。
+        <!-- ===== 老師補充結束 ===== -->
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer>
+  請家長使用瀏覽器直接查看本頁面內容即可，如有問題請聯繫導師。
+</footer>
+
+<script>
+  // 日期自動抓「今天」，不用手動改
+  (function(){
+    const d = new Date();
+    const weekdayChars = ['日','一','二','三','四','五','六'];
+    document.getElementById('rocYear').textContent = d.getFullYear() - 1911;
+    document.getElementById('month').textContent = d.getMonth() + 1;
+    document.getElementById('day').textContent = d.getDate();
+    document.getElementById('weekday').textContent = weekdayChars[d.getDay()];
+  })();
+
+  // 欄位編號自動產生，不用手動填數字
+  (function(){
+    document.querySelectorAll('#columnsTable .col-num').forEach((el, i)=>{
+      el.textContent = i + 1;
+    });
+  })();
+</script>
+
+</body>
+</html>
