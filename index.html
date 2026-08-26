@@ -48,47 +48,46 @@
   }
   .card-body{ padding: 18px 18px 22px; }
 
-  /* ---- 上方：直式編號欄位 + 大日期區塊 ---- */
+  /* ---- 上方：橫式格子清單 + 大日期區塊 ---- */
   .top-row{
     display:flex; gap:0; align-items:stretch;
     border: 2px solid var(--border-brown);
     border-radius: 12px;
     overflow:hidden;
-    min-height: 260px;
   }
 
-  .columns-table{
-    flex:1; display:flex; flex-direction:row-reverse;
-    overflow-x:auto;
+  .rows-list{
+    flex:1; display:flex; flex-direction:column;
     background: var(--paper);
   }
-  .col-item{
-    display:flex; flex-direction:column;
-    min-width: 48px;
-    border-left: 1px solid rgba(107,74,43,0.25);
-  }
-  .col-item:first-child{ border-left:none; }
-  .col-num{
-    background: var(--paper-dark);
-    text-align:center; font-weight:700; font-size:13px; color: var(--ink-soft);
-    padding: 7px 0;
+  .row-item{
+    display:flex; align-items:stretch;
     border-bottom: 1px solid rgba(107,74,43,0.25);
   }
-  .col-text{
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    font-size: 18px; font-weight:700; letter-spacing: 2px;
-    padding: 12px 8px;
-    line-height: 1.9;
-    flex:1;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(1.9em - 1px),
-      rgba(107,74,43,0.14) calc(1.9em - 1px),
-      rgba(107,74,43,0.14) 1.9em
-    );
+  .row-item:last-child{ border-bottom:none; }
+
+  .row-num{
+    flex: 0 0 32px;
+    background: var(--paper-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 13px; font-weight:700; color: var(--ink-soft);
+    border-right: 1px solid rgba(107,74,43,0.25);
   }
+
+  .cells-row{
+    flex:1; display:flex; flex-wrap:wrap;
+  }
+  .cell{
+    width: 38px; height: 38px;
+    display:flex; align-items:center; justify-content:center;
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-weight: 900;
+    font-size: 19px;
+    color: var(--ink);
+    border-right: 1px solid rgba(107,74,43,0.18);
+    border-bottom: 1px solid rgba(107,74,43,0.18);
+  }
+  .cells-row .cell:last-child{ border-right:none; }
 
   .date-block{
     flex: 0 0 100px;
@@ -103,7 +102,8 @@
   }
   .date-cell:last-child{ border-bottom:none; }
   .date-cell .num{
-    font-family:"Kalam",sans-serif; font-weight:700; font-size: 26px; color: var(--red);
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-weight: 900; font-size: 26px; color: var(--red);
     line-height:1;
   }
   .date-cell .unit{ font-size: 12px; color: var(--ink-soft); margin-top:2px; }
@@ -134,9 +134,9 @@
   }
 
   @media (max-width:480px){
-    .col-text{ font-size:16px; padding:10px 6px; }
-    .date-block{ flex-basis: 86px; }
-    .date-cell .num{ font-size:22px; }
+    .cell{ width: 30px; height: 30px; font-size: 16px; }
+    .date-block{ flex-basis: 78px; }
+    .date-cell .num{ font-size:20px; }
   }
 </style>
 </head>
@@ -144,7 +144,7 @@
 
 <header>
   <!-- ===== 改這裡：標題 ===== -->
-  <h1>📋 四年級電子聯絡本</h1>
+  <h1>📋 三年級電子聯絡本</h1>
   <!-- ===== 標題結束 ===== -->
 </header>
 
@@ -154,19 +154,17 @@
     <div class="card-body">
 
       <div class="top-row">
-        <div class="columns-table" id="columnsTable">
+        <div class="rows-list" id="rowsList">
           <!--
-            ===== 改這裡：每一項目用一個 <div class="col-item"><div class="col-num"></div><div class="col-text">文字</div></div>
-            文字會直著寫，編號會自動產生不用自己填。
-            要新增項目，直接複製一整組（從 <div class="col-item"> 到對應的 </div>）貼在後面，改「col-text」裡的文字就好。
-            項目會由左到右依照你寫的順序排列（跟課本聯絡簿一樣，最早的項目在最右邊）。
-            每欄文字不要放太長的句子，太長會被拉得很高，建議濃縮成 4-8 個字的短語。
+            ===== 改這裡：每一項目用一個 <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="文字"></div></div>
+            文字寫在 data-text="這裡" 的引號裡面，每個字會自動變成一個方格，編號也會自動產生。
+            要新增項目，複製一整組（從 <div class="row-item"> 到對應的 </div>）貼在後面，改 data-text 裡的文字就好。
           -->
-          <div class="col-item"><div class="col-num"></div><div class="col-text">明返校日</div></div>
-          <div class="col-item"><div class="col-num"></div><div class="col-text">帶直笛</div></div>
-          <div class="col-item"><div class="col-num"></div><div class="col-text">甲本p1-3</div></div>
-          <div class="col-item"><div class="col-num"></div><div class="col-text">數習p30</div></div>
-          <div class="col-item"><div class="col-num"></div><div class="col-text">做家事（     ）</div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="明返校日"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="帶直笛"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="國習5課"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="數習p30"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="閱讀20分"></div></div>
           <!-- ===== 項目結束 ===== -->
         </div>
 
@@ -211,10 +209,19 @@
     document.getElementById('weekday').textContent = weekdayChars[d.getDay()];
   })();
 
-  // 欄位編號自動產生，不用手動填數字
+  // 把每個項目的文字自動拆成一個一個方格，並自動編號
   (function(){
-    document.querySelectorAll('#columnsTable .col-num').forEach((el, i)=>{
-      el.textContent = i + 1;
+    const rows = document.querySelectorAll('#rowsList .row-item');
+    rows.forEach((row, i)=>{
+      row.querySelector('.row-num').textContent = i + 1;
+      const cellsRow = row.querySelector('.cells-row');
+      const text = cellsRow.getAttribute('data-text') || '';
+      Array.from(text).forEach(ch=>{
+        const span = document.createElement('span');
+        span.className = 'cell';
+        span.textContent = ch;
+        cellsRow.appendChild(span);
+      });
     });
   })();
 </script>
