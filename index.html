@@ -48,7 +48,7 @@
   }
   .card-body{ padding: 18px 18px 22px; }
 
-  /* ---- 上方：橫式格子清單 + 大日期區塊 ---- */
+  /* ---- 上方：日期區（左） + 橫式格子清單（右） ---- */
   .top-row{
     display:flex; gap:0; align-items:stretch;
     border: 2px solid var(--border-brown);
@@ -56,10 +56,31 @@
     overflow:hidden;
   }
 
+  .date-block{
+    flex: 0 0 84px;
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+    display:flex; flex-direction:column;
+    border-right: 2px solid var(--border-brown);
+  }
+  .date-cell{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    border-bottom: 1px solid rgba(107,74,43,0.35);
+    padding: 4px 4px;
+  }
+  .date-cell:last-child{ border-bottom:none; }
+  .date-cell .num{
+    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    font-weight: 900; font-size: 22px; color: var(--red);
+    line-height:1;
+  }
+  .date-cell .unit{ font-size: 10px; color: var(--ink-soft); margin-top:2px; }
+  .date-cell.weekday .num{ font-size: 18px; }
+
   .rows-list{
     flex:1; display:flex; flex-direction:column;
     background: var(--paper);
     min-width:0; /* 讓 flex 子項目可以正確縮小，避免格子被推出容器 */
+    border-top: 1px solid rgba(107,74,43,0.55);
   }
   .row-item{
     display:flex; align-items:stretch;
@@ -74,47 +95,27 @@
     border-bottom: 1px solid rgba(107,74,43,0.55);
   }
 
-  /* 改用 grid：欄數由 JS 計算後寫進 grid-template-columns，
+  /* 用 grid：欄數由 JS 計算後寫進 grid-template-columns，
      每一格用 1fr 平分寬度，整列一定會剛好填滿到最右邊，不會留白。
      每一行的分隔線只由 .cell 的 border-bottom 畫一次，避免跟其他框線重疊變粗。 */
   .cells-row{
     flex:1;
     display:grid;
   }
-  .rows-list{
-    border-top: 1px solid rgba(107,74,43,0.55);
-  }
   .cell{
-    height: 38px;
+    height: 42px;
     display:flex; align-items:center; justify-content:center;
     font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
     font-weight: 900;
-    font-size: 19px;
+    font-size: 20px;
     color: var(--ink);
     border-right: 1px solid rgba(107,74,43,0.55);
     border-bottom: 1px solid rgba(107,74,43,0.55);
+    padding: 0 2px;
   }
   .cells-row .cell:first-child{ border-left: 1px solid rgba(107,74,43,0.55); }
-
-  .date-block{
-    flex: 0 0 76px;
-    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
-    display:flex; flex-direction:column;
-    border-right: 2px solid var(--border-brown);
-  }
-  .date-cell{
-    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    border-bottom: 1px solid rgba(107,74,43,0.35);
-    padding: 4px 4px;
-  }
-  .date-cell:last-child{ border-bottom:none; }
-  .date-cell .num{
-    font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    font-weight: 900; font-size: 18px; color: var(--red);
-    line-height:1;
-  }
-  .date-cell .unit{ font-size: 10px; color: var(--ink-soft); margin-top:2px; }
-  .date-cell.weekday .num{ font-size: 15px; }
+  /* 連續的英文字母/數字（例如 30、p30）會合併成同一格，字級縮小以塞得下 */
+  .cell.cell-wide{ font-size: 13px; letter-spacing: -0.3px; }
 
   .classname-row{
     text-align:center; margin-top:12px; font-size:14px; color: var(--ink-soft);
@@ -140,11 +141,13 @@
     color: var(--ink-soft); font-size:12px; text-align:center;
   }
 
+  /* 手機優化：格子和日期數字都放大，看起來剛剛好 */
   @media (max-width:480px){
-    .cell{ height: 34px; font-size: 16px; }
-    .date-block{ flex-basis: 62px; }
-    .date-cell .num{ font-size:15px; }
-    .date-cell.weekday .num{ font-size: 13px; }
+    .date-block{ flex-basis: 74px; }
+    .date-cell .num{ font-size: 24px; }
+    .date-cell.weekday .num{ font-size: 19px; }
+    .cell{ height: 40px; font-size: 20px; }
+    .cell.cell-wide{ font-size: 13px; }
   }
 </style>
 </head>
@@ -172,11 +175,14 @@
         <div class="rows-list" id="rowsList">
           <!--
             ===== 改這裡：每一項目用一個 <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="文字"></div></div>
-            文字寫在 data-text="這裡" 的引號裡面，每個字會自動變成一個方格，編號也會自動產生。
+            文字寫在 data-text="這裡" 的引號裡面。中文字會一個字一個格；連續的英文字母或數字（例如 30、p30）會自動合併放在同一格。
             要新增項目，複製一整組（從 <div class="row-item"> 到對應的 </div>）貼在後面，改 data-text 裡的文字就好。
           -->
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="明返校日"></div></div>
-          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="數習p20-24"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="帶直笛"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="國習5課"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="數習p30-35"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="小日記（60字）"></div></div>
           <!-- ===== 項目結束 ===== -->
         </div>
       </div>
@@ -191,7 +197,7 @@
 
       <div class="teacher-note">
         <!-- ===== 改這裡：老師補充文字 ===== -->
-        <b>老師補充：</b>暑假作業、學用品、防災頭套
+        <b>老師補充：</b>暑假作業、學用品、防災頭套、簽字筆、姓名貼 請於本週五前繳交，謝謝配合。
         <!-- ===== 老師補充結束 ===== -->
       </div>
 
@@ -214,32 +220,38 @@
     document.getElementById('weekday').textContent = weekdayChars[d.getDay()];
   })();
 
-  // 把每個項目的文字拆成方格，並把整條列都補滿格子到最右邊（不管有沒有字都顯示格線）
-  // 用 CSS grid + 1fr 讓格子平分寬度，整列一定剛好填滿、不會留白邊
-  // 畫面寬度改變時（例如轉手機方向）也會重新計算格數
+  // 把每個項目的文字拆成方格，並把整條列都補滿格子到最右邊（不管有沒有字都顯示格線）。
+  // 連續的英文字母/數字（例如 "30"、"p30"）會合併成同一格，其餘每個字（含中文）各自一格。
+  // 用 CSS grid + 1fr 讓格子平分寬度，整列一定剛好填滿、不會留白邊。
+  // 畫面寬度改變時（例如轉手機方向）也會重新計算格數。
   (function(){
+    function tokenize(text){
+      return text.match(/[A-Za-z0-9]+|./g) || [];
+    }
+
     const rows = Array.from(document.querySelectorAll('#rowsList .row-item'));
-    const targetCellWidth = 38; // 想要的格子大約寬度，用來估算欄數
+    const targetCellWidth = 40; // 想要的格子大約寬度，用來估算欄數
 
     function buildGrid(){
       const sampleRowsList = document.getElementById('rowsList');
       const availableWidth = sampleRowsList.getBoundingClientRect().width - 32; // 扣掉左邊編號欄寬度
       const colsForWidth = Math.max(1, Math.floor(availableWidth / targetCellWidth));
 
-      const texts = rows.map(row => Array.from(row.querySelector('.cells-row').getAttribute('data-text') || ''));
-      const maxTextLen = Math.max(1, ...texts.map(chars => chars.length));
-      const cols = Math.max(maxTextLen, colsForWidth);
+      const tokenLists = rows.map(row => tokenize(row.querySelector('.cells-row').getAttribute('data-text') || ''));
+      const maxTokenLen = Math.max(1, ...tokenLists.map(tokens => tokens.length));
+      const cols = Math.max(maxTokenLen, colsForWidth);
 
       rows.forEach((row, i)=>{
         row.querySelector('.row-num').textContent = i + 1;
         const cellsRow = row.querySelector('.cells-row');
         cellsRow.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
         cellsRow.innerHTML = '';
-        const chars = texts[i];
+        const tokens = tokenLists[i];
         for(let j = 0; j < cols; j++){
           const span = document.createElement('span');
-          span.className = 'cell';
-          span.textContent = chars[j] || '';
+          const token = tokens[j] || '';
+          span.className = 'cell' + (token.length > 1 ? ' cell-wide' : '');
+          span.textContent = token;
           cellsRow.appendChild(span);
         }
       });
