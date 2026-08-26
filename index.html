@@ -57,7 +57,7 @@
   }
 
   .date-block{
-    flex: 0 0 84px;
+    flex: 0 0 96px;
     background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
     display:flex; flex-direction:column;
     border-right: 2px solid var(--border-brown);
@@ -70,52 +70,47 @@
   .date-cell:last-child{ border-bottom:none; }
   .date-cell .num{
     font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    font-weight: 900; font-size: 22px; color: var(--red);
+    font-weight: 900; font-size: 30px; color: var(--red);
     line-height:1;
   }
-  .date-cell .unit{ font-size: 10px; color: var(--ink-soft); margin-top:2px; }
-  .date-cell.weekday .num{ font-size: 18px; }
+  .date-cell .unit{ font-size: 12px; color: var(--ink-soft); margin-top:2px; }
+  .date-cell.weekday .num{ font-size: 24px; }
 
   .rows-list{
-    flex:1; display:flex; flex-direction:column;
+    flex:1; display:grid;
     background: var(--paper);
-    min-width:0; /* 讓 flex 子項目可以正確縮小，避免格子被推出容器 */
+    min-width:0; /* 讓 grid 容器可以正確縮小，避免格子被推出容器 */
     border-top: 1px solid rgba(107,74,43,0.55);
   }
-  .row-item{
-    display:flex; align-items:stretch;
-  }
+  /* row-item 和 cells-row 只是為了方便用 data-text 標記文字用的包裝層，
+     用 display:contents 讓裡面的 row-num / cell 直接變成 rows-list 這個
+     grid 的成員 —— 所有列共用同一組欄寬定義，格子才會上下完全對齊。 */
+  .row-item{ display:contents; }
+  .cells-row{ display:contents; }
 
   .row-num{
-    flex: 0 0 32px;
     background: var(--paper-dark);
     display:flex; align-items:center; justify-content:center;
     font-size: 13px; font-weight:700; color: var(--ink-soft);
     border-right: 1px solid rgba(107,74,43,0.55);
     border-bottom: 1px solid rgba(107,74,43,0.55);
+    grid-column: 1;
   }
 
-  /* 用 grid：欄數由 JS 計算後寫進 grid-template-columns，
-     每一格用 1fr 平分寬度，整列一定會剛好填滿到最右邊，不會留白。
-     每一行的分隔線只由 .cell 的 border-bottom 畫一次，避免跟其他框線重疊變粗。 */
-  .cells-row{
-    flex:1;
-    display:grid;
-  }
   .cell{
-    height: 42px;
+    height: 54px;
     display:flex; align-items:center; justify-content:center;
     font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
     font-weight: 900;
-    font-size: 20px;
+    font-size: 32px;
     color: var(--ink);
     border-right: 1px solid rgba(107,74,43,0.55);
     border-bottom: 1px solid rgba(107,74,43,0.55);
     padding: 0 2px;
   }
   .cells-row .cell:first-child{ border-left: 1px solid rgba(107,74,43,0.55); }
-  /* 連續的英文字母/數字（例如 30、p30）會合併成同一格，字級縮小以塞得下 */
-  .cell.cell-wide{ font-size: 13px; letter-spacing: -0.3px; }
+  /* 連續的英文字母/數字（例如 30、p30）會合併成同一格，字級比國字小一點 */
+  .cell.cell-wide{ font-size: 22px; letter-spacing: -0.5px; }
 
   .classname-row{
     text-align:center; margin-top:12px; font-size:14px; color: var(--ink-soft);
@@ -141,13 +136,14 @@
     color: var(--ink-soft); font-size:12px; text-align:center;
   }
 
-  /* 手機優化：格子和日期數字都放大，看起來剛剛好 */
+  /* 手機優化：維持正常好讀的大小（不像電腦版那麼大），日期也縮小一點 */
   @media (max-width:480px){
-    .date-block{ flex-basis: 74px; }
-    .date-cell .num{ font-size: 24px; }
-    .date-cell.weekday .num{ font-size: 19px; }
+    .date-block{ flex-basis: 62px; }
+    .date-cell .num{ font-size: 17px; }
+    .date-cell.weekday .num{ font-size: 14px; }
+    .date-cell .unit{ font-size: 9px; }
     .cell{ height: 40px; font-size: 20px; }
-    .cell.cell-wide{ font-size: 13px; }
+    .cell.cell-wide{ font-size: 15px; }
   }
 </style>
 </head>
@@ -181,8 +177,8 @@
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="明返校日"></div></div>
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="帶直笛"></div></div>
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="國習5課"></div></div>
-          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="數習p30-35"></div></div>
-          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="小日記（60字）"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="數習p30-40"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="做家事（    ）"></div></div>
           <!-- ===== 項目結束 ===== -->
         </div>
       </div>
@@ -229,22 +225,26 @@
       return text.match(/[A-Za-z0-9]+|./g) || [];
     }
 
-    const rows = Array.from(document.querySelectorAll('#rowsList .row-item'));
-    const targetCellWidth = 40; // 想要的格子大約寬度，用來估算欄數
+    const rowsList = document.getElementById('rowsList');
+    const rows = Array.from(rowsList.querySelectorAll('.row-item'));
+    const targetCellWidth = 46; // 想要的格子大約寬度（電腦版），用來估算欄數
+    const rowNumWidth = 32; // 左邊編號欄的寬度
 
     function buildGrid(){
-      const sampleRowsList = document.getElementById('rowsList');
-      const availableWidth = sampleRowsList.getBoundingClientRect().width - 32; // 扣掉左邊編號欄寬度
+      const availableWidth = rowsList.getBoundingClientRect().width - rowNumWidth;
       const colsForWidth = Math.max(1, Math.floor(availableWidth / targetCellWidth));
 
       const tokenLists = rows.map(row => tokenize(row.querySelector('.cells-row').getAttribute('data-text') || ''));
       const maxTokenLen = Math.max(1, ...tokenLists.map(tokens => tokens.length));
       const cols = Math.max(maxTokenLen, colsForWidth);
 
+      // 整個清單只用「一組」欄寬定義（row-num 欄 + cols 個 1fr 格子欄），
+      // 每一列都套用同一組欄寬，格子才會逐欄完全對齊，不會因為各自獨立計算而產生誤差。
+      rowsList.style.gridTemplateColumns = `${rowNumWidth}px repeat(${cols}, 1fr)`;
+
       rows.forEach((row, i)=>{
         row.querySelector('.row-num').textContent = i + 1;
         const cellsRow = row.querySelector('.cells-row');
-        cellsRow.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
         cellsRow.innerHTML = '';
         const tokens = tokenLists[i];
         for(let j = 0; j < cols; j++){
