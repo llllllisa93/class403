@@ -59,55 +59,62 @@
   .rows-list{
     flex:1; display:flex; flex-direction:column;
     background: var(--paper);
+    min-width:0; /* 讓 flex 子項目可以正確縮小，避免格子被推出容器 */
   }
   .row-item{
     display:flex; align-items:stretch;
-    border-bottom: 1px solid rgba(107,74,43,0.25);
   }
-  .row-item:last-child{ border-bottom:none; }
 
   .row-num{
     flex: 0 0 32px;
     background: var(--paper-dark);
     display:flex; align-items:center; justify-content:center;
     font-size: 13px; font-weight:700; color: var(--ink-soft);
-    border-right: 1px solid rgba(107,74,43,0.25);
+    border-right: 1px solid rgba(107,74,43,0.55);
+    border-bottom: 1px solid rgba(107,74,43,0.55);
   }
 
+  /* 改用 grid：欄數由 JS 計算後寫進 grid-template-columns，
+     每一格用 1fr 平分寬度，整列一定會剛好填滿到最右邊，不會留白。
+     每一行的分隔線只由 .cell 的 border-bottom 畫一次，避免跟其他框線重疊變粗。 */
   .cells-row{
-    flex:1; display:flex; flex-wrap:wrap;
+    flex:1;
+    display:grid;
+  }
+  .rows-list{
+    border-top: 1px solid rgba(107,74,43,0.55);
   }
   .cell{
-    width: 38px; height: 38px;
+    height: 38px;
     display:flex; align-items:center; justify-content:center;
     font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
     font-weight: 900;
     font-size: 19px;
     color: var(--ink);
-    border-right: 1px solid rgba(107,74,43,0.18);
-    border-bottom: 1px solid rgba(107,74,43,0.18);
+    border-right: 1px solid rgba(107,74,43,0.55);
+    border-bottom: 1px solid rgba(107,74,43,0.55);
   }
-  .cells-row .cell:last-child{ border-right:none; }
+  .cells-row .cell:first-child{ border-left: 1px solid rgba(107,74,43,0.55); }
 
   .date-block{
-    flex: 0 0 100px;
+    flex: 0 0 76px;
     background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
     display:flex; flex-direction:column;
-    border-left: 2px solid var(--border-brown);
+    border-right: 2px solid var(--border-brown);
   }
   .date-cell{
     flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
     border-bottom: 1px solid rgba(107,74,43,0.35);
-    padding: 6px 4px;
+    padding: 4px 4px;
   }
   .date-cell:last-child{ border-bottom:none; }
   .date-cell .num{
     font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
-    font-weight: 900; font-size: 26px; color: var(--red);
+    font-weight: 900; font-size: 18px; color: var(--red);
     line-height:1;
   }
-  .date-cell .unit{ font-size: 12px; color: var(--ink-soft); margin-top:2px; }
-  .date-cell.weekday .num{ font-size: 20px; }
+  .date-cell .unit{ font-size: 10px; color: var(--ink-soft); margin-top:2px; }
+  .date-cell.weekday .num{ font-size: 15px; }
 
   .classname-row{
     text-align:center; margin-top:12px; font-size:14px; color: var(--ink-soft);
@@ -134,9 +141,10 @@
   }
 
   @media (max-width:480px){
-    .cell{ width: 30px; height: 30px; font-size: 16px; }
-    .date-block{ flex-basis: 78px; }
-    .date-cell .num{ font-size:20px; }
+    .cell{ height: 34px; font-size: 16px; }
+    .date-block{ flex-basis: 62px; }
+    .date-cell .num{ font-size:15px; }
+    .date-cell.weekday .num{ font-size: 13px; }
   }
 </style>
 </head>
@@ -154,6 +162,13 @@
     <div class="card-body">
 
       <div class="top-row">
+        <div class="date-block">
+          <div class="date-cell"><span class="num" id="rocYear">115</span><span class="unit">年</span></div>
+          <div class="date-cell"><span class="num" id="month">8</span><span class="unit">月</span></div>
+          <div class="date-cell"><span class="num" id="day">26</span><span class="unit">日</span></div>
+          <div class="date-cell weekday"><span class="num" id="weekday">三</span><span class="unit">星期</span></div>
+        </div>
+
         <div class="rows-list" id="rowsList">
           <!--
             ===== 改這裡：每一項目用一個 <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="文字"></div></div>
@@ -166,13 +181,6 @@
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="數習p30"></div></div>
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="閱讀20分"></div></div>
           <!-- ===== 項目結束 ===== -->
-        </div>
-
-        <div class="date-block">
-          <div class="date-cell"><span class="num" id="rocYear">115</span><span class="unit">年</span></div>
-          <div class="date-cell"><span class="num" id="month">8</span><span class="unit">月</span></div>
-          <div class="date-cell"><span class="num" id="day">26</span><span class="unit">日</span></div>
-          <div class="date-cell weekday"><span class="num" id="weekday">三</span><span class="unit">星期</span></div>
         </div>
       </div>
 
@@ -209,19 +217,42 @@
     document.getElementById('weekday').textContent = weekdayChars[d.getDay()];
   })();
 
-  // 把每個項目的文字自動拆成一個一個方格，並自動編號
+  // 把每個項目的文字拆成方格，並把整條列都補滿格子到最右邊（不管有沒有字都顯示格線）
+  // 用 CSS grid + 1fr 讓格子平分寬度，整列一定剛好填滿、不會留白邊
+  // 畫面寬度改變時（例如轉手機方向）也會重新計算格數
   (function(){
-    const rows = document.querySelectorAll('#rowsList .row-item');
-    rows.forEach((row, i)=>{
-      row.querySelector('.row-num').textContent = i + 1;
-      const cellsRow = row.querySelector('.cells-row');
-      const text = cellsRow.getAttribute('data-text') || '';
-      Array.from(text).forEach(ch=>{
-        const span = document.createElement('span');
-        span.className = 'cell';
-        span.textContent = ch;
-        cellsRow.appendChild(span);
+    const rows = Array.from(document.querySelectorAll('#rowsList .row-item'));
+    const targetCellWidth = 38; // 想要的格子大約寬度，用來估算欄數
+
+    function buildGrid(){
+      const sampleRowsList = document.getElementById('rowsList');
+      const availableWidth = sampleRowsList.getBoundingClientRect().width - 32; // 扣掉左邊編號欄寬度
+      const colsForWidth = Math.max(1, Math.floor(availableWidth / targetCellWidth));
+
+      const texts = rows.map(row => Array.from(row.querySelector('.cells-row').getAttribute('data-text') || ''));
+      const maxTextLen = Math.max(1, ...texts.map(chars => chars.length));
+      const cols = Math.max(maxTextLen, colsForWidth);
+
+      rows.forEach((row, i)=>{
+        row.querySelector('.row-num').textContent = i + 1;
+        const cellsRow = row.querySelector('.cells-row');
+        cellsRow.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+        cellsRow.innerHTML = '';
+        const chars = texts[i];
+        for(let j = 0; j < cols; j++){
+          const span = document.createElement('span');
+          span.className = 'cell';
+          span.textContent = chars[j] || '';
+          cellsRow.appendChild(span);
+        }
       });
+    }
+
+    buildGrid();
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(buildGrid, 150);
     });
   })();
 </script>
