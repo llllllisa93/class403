@@ -191,7 +191,7 @@
 
       <div class="teacher-note">
         <!-- ===== 改這裡：老師補充文字 ===== -->
-        <b>老師補充：</b>暑假作業、學用品、防災頭套、姓名貼、小椅子、桌墊
+        <b>老師補充：</b>暑假作業、學用品、防災頭套、姓名貼
         <!-- ===== 老師補充結束 ===== -->
       </div>
 
@@ -223,6 +223,7 @@
     }
 
     const MAX_COLS = 10;
+    const MIN_LINES = 4; // 跟日期區塊的 4 格（年/月/日/星期）對齊，項目太少時用空白格子補滿高度，格線才不會斷掉
     const rowsList = document.getElementById('rowsList');
 
     // 先把每個項目原本寫在 data-text 裡的文字讀出來存好，
@@ -241,30 +242,51 @@
       return out;
     }
 
+    function makeLine(numText, lineTokens){
+      const rowNum = document.createElement('div');
+      rowNum.className = 'row-num';
+      rowNum.textContent = numText;
+
+      const cellsRow = document.createElement('div');
+      cellsRow.className = 'cells-row';
+      for(let j = 0; j < MAX_COLS; j++){
+        const span = document.createElement('span');
+        const token = (lineTokens && lineTokens[j]) || '';
+        span.className = 'cell' + (token.length > 1 ? ' cell-wide' : '');
+        span.textContent = token;
+        cellsRow.appendChild(span);
+      }
+      return [rowNum, cellsRow];
+    }
+
     function buildGrid(){
+      // 先清掉上一次補的空白列，避免重複呼叫時疊加
+      rowsList.querySelectorAll('.filler-line').forEach(el => el.remove());
+
+      let totalLines = 0;
+
       items.forEach((item, i)=>{
         item.el.innerHTML = '';
         const tokens = tokenize(item.text);
         const lines = chunk(tokens, MAX_COLS);
 
         lines.forEach((lineTokens, lineIndex)=>{
-          const rowNum = document.createElement('div');
-          rowNum.className = 'row-num';
-          rowNum.textContent = lineIndex === 0 ? String(i + 1) : '';
+          const [rowNum, cellsRow] = makeLine(lineIndex === 0 ? String(i + 1) : '', lineTokens);
           item.el.appendChild(rowNum);
-
-          const cellsRow = document.createElement('div');
-          cellsRow.className = 'cells-row';
-          for(let j = 0; j < MAX_COLS; j++){
-            const span = document.createElement('span');
-            const token = lineTokens[j] || '';
-            span.className = 'cell' + (token.length > 1 ? ' cell-wide' : '');
-            span.textContent = token;
-            cellsRow.appendChild(span);
-          }
           item.el.appendChild(cellsRow);
         });
+
+        totalLines += lines.length;
       });
+
+      // 項目太少、格數不夠撐滿日期區塊的高度時，補上空白列，讓格線一路畫到底，不會出現沒有線的空白區
+      for(let k = totalLines; k < MIN_LINES; k++){
+        const [rowNum, cellsRow] = makeLine('', null);
+        rowNum.classList.add('filler-line');
+        cellsRow.classList.add('filler-line');
+        rowsList.appendChild(rowNum);
+        rowsList.appendChild(cellsRow);
+      }
     }
 
     buildGrid();
