@@ -78,6 +78,7 @@
 
   .rows-list{
     flex:1; display:grid;
+    grid-template-columns: 32px repeat(10, 1fr);
     background: var(--paper);
     min-width:0; /* 讓 grid 容器可以正確縮小，避免格子被推出容器 */
     border-top: 1px solid rgba(107,74,43,0.55);
@@ -175,9 +176,7 @@
             要新增項目，複製一整組（從 <div class="row-item"> 到對應的 </div>）貼在後面，改 data-text 裡的文字就好。
           -->
           <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="明返校日"></div></div>
-          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="帶暑假作業"></div></div>
-          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="帶以下物品"></div></div>
-          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="暑假作業、學用品、防災頭套、姓名貼"></div></div>
+          <div class="row-item"><div class="row-num"></div><div class="cells-row" data-text="攜帶以下物品"></div></div>
           <!-- ===== 項目結束 ===== -->
         </div>
       </div>
@@ -192,7 +191,7 @@
 
       <div class="teacher-note">
         <!-- ===== 改這裡：老師補充文字 ===== -->
-        <b>老師補充：</b>
+        <b>老師補充：</b>暑假作業、學用品、防災頭套、姓名貼、小椅子、桌墊
         <!-- ===== 老師補充結束 ===== -->
       </div>
 
@@ -215,53 +214,60 @@
     document.getElementById('weekday').textContent = weekdayChars[d.getDay()];
   })();
 
-  // 把每個項目的文字拆成方格，並把整條列都補滿格子到最右邊（不管有沒有字都顯示格線）。
+  // 把每個項目的文字拆成方格，固定「一行最多 10 格」。
   // 連續的英文字母/數字（例如 "30"、"p30"）會合併成同一格，其餘每個字（含中文）各自一格。
-  // 用 CSS grid + 1fr 讓格子平分寬度，整列一定剛好填滿、不會留白邊。
-  // 畫面寬度改變時（例如轉手機方向）也會重新計算格數。
+  // 如果項目的格數超過 10，會自動換到下一行繼續（同一個項目、同一個編號），不會被裁切看不到。
   (function(){
     function tokenize(text){
       return text.match(/[A-Za-z0-9]+|./g) || [];
     }
 
+    const MAX_COLS = 10;
     const rowsList = document.getElementById('rowsList');
-    const rows = Array.from(rowsList.querySelectorAll('.row-item'));
-    const targetCellWidth = 46; // 想要的格子大約寬度（電腦版），用來估算欄數
-    const rowNumWidth = 32; // 左邊編號欄的寬度
+
+    // 先把每個項目原本寫在 data-text 裡的文字讀出來存好，
+    // 之後重建格子時就不用再依賴會被清空重寫的 DOM 內容。
+    const items = Array.from(rowsList.querySelectorAll('.row-item')).map(el => ({
+      el,
+      text: el.querySelector('.cells-row').getAttribute('data-text') || ''
+    }));
+
+    function chunk(tokens, size){
+      const out = [];
+      for(let i = 0; i < tokens.length; i += size){
+        out.push(tokens.slice(i, i + size));
+      }
+      if(out.length === 0) out.push([]);
+      return out;
+    }
 
     function buildGrid(){
-      const availableWidth = rowsList.getBoundingClientRect().width - rowNumWidth;
-      const colsForWidth = Math.max(1, Math.floor(availableWidth / targetCellWidth));
+      items.forEach((item, i)=>{
+        item.el.innerHTML = '';
+        const tokens = tokenize(item.text);
+        const lines = chunk(tokens, MAX_COLS);
 
-      const tokenLists = rows.map(row => tokenize(row.querySelector('.cells-row').getAttribute('data-text') || ''));
-      const maxTokenLen = Math.max(1, ...tokenLists.map(tokens => tokens.length));
-      const cols = Math.max(maxTokenLen, colsForWidth);
+        lines.forEach((lineTokens, lineIndex)=>{
+          const rowNum = document.createElement('div');
+          rowNum.className = 'row-num';
+          rowNum.textContent = lineIndex === 0 ? String(i + 1) : '';
+          item.el.appendChild(rowNum);
 
-      // 整個清單只用「一組」欄寬定義（row-num 欄 + cols 個 1fr 格子欄），
-      // 每一列都套用同一組欄寬，格子才會逐欄完全對齊，不會因為各自獨立計算而產生誤差。
-      rowsList.style.gridTemplateColumns = `${rowNumWidth}px repeat(${cols}, 1fr)`;
-
-      rows.forEach((row, i)=>{
-        row.querySelector('.row-num').textContent = i + 1;
-        const cellsRow = row.querySelector('.cells-row');
-        cellsRow.innerHTML = '';
-        const tokens = tokenLists[i];
-        for(let j = 0; j < cols; j++){
-          const span = document.createElement('span');
-          const token = tokens[j] || '';
-          span.className = 'cell' + (token.length > 1 ? ' cell-wide' : '');
-          span.textContent = token;
-          cellsRow.appendChild(span);
-        }
+          const cellsRow = document.createElement('div');
+          cellsRow.className = 'cells-row';
+          for(let j = 0; j < MAX_COLS; j++){
+            const span = document.createElement('span');
+            const token = lineTokens[j] || '';
+            span.className = 'cell' + (token.length > 1 ? ' cell-wide' : '');
+            span.textContent = token;
+            cellsRow.appendChild(span);
+          }
+          item.el.appendChild(cellsRow);
+        });
       });
     }
 
     buildGrid();
-    let resizeTimer;
-    window.addEventListener('resize', ()=>{
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(buildGrid, 150);
-    });
   })();
 </script>
 
